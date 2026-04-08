@@ -1,5 +1,5 @@
 {
-  "name": "temp_app",
+  "name": "sml-regression-app",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -10,12 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "ml-matrix": "^6.12.1",
-    "ml-regression": "^6.3.0",
-    "ml-regression-polynomial": "^3.0.2",
+    "@fontsource-variable/jetbrains-mono": "^5.2.8",
+    "@fontsource/dm-sans": "^5.2.8",
+    "@fontsource/lora": "^5.2.8",
+    "@fontsource/syne": "^5.2.7",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "recharts": "^3.8.1"
+    "react-dom": "^19.2.4"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
