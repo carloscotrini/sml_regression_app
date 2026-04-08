@@ -307,7 +307,6 @@ export default function App() {
               params={params}
               onParamsChange={setParams}
               trainData={trainData}
-              scenarioId={scenario}
             />
             <button
               onClick={() => advanceStep('params')}
@@ -390,6 +389,7 @@ export default function App() {
             trainData={trainData}
             testData={testData}
             modelFn={modelDef?.fn}
+            modelId={selectedModel}
             modelParams={selectedModel ? params : null}
             lossFn={lossDef}
             showResiduals={currentStep === 'loss' || currentStep === 'params' || currentStep === 'validate'}

@@ -1,5 +1,5 @@
 import React, { useMemo, useCallback, useState } from 'react';
-import { COLORS, FONTS } from '../constants';
+import { COLORS, FONTS, MODELS } from '../constants';
 import { generateCurvePoints } from '../mathUtils';
 
 // Simple linear scale
@@ -33,10 +33,17 @@ function niceTickValues(min, max, count = 5) {
 
 const MARGIN = { top: 20, right: 20, bottom: 50, left: 60 };
 
+// Faint palette for variation curves
+const VARIATION_COLORS = [
+  '#38bdf840', '#fbbf2440', '#34d39940', '#f472b640',
+  '#22d3ee40', '#a78bfa40', '#fb923c40',
+];
+
 export default function ScatterPlot({
   trainData,
   testData,
   modelFn,
+  modelId,
   modelParams,
   lossFn,
   showResiduals,
@@ -114,6 +121,39 @@ export default function ScatterPlot({
     }
     return d;
   }, [curvePoints, xScale, yScale, height]);
+
+  // Generate variation curves (multiple model instances shown in background)
+  const variationPaths = useMemo(() => {
+    if (!modelId || !modelFn) return [];
+    const modelDef = MODELS.find(m => m.id === modelId);
+    if (!modelDef || !modelDef.variations) return [];
+
+    const xMin = xScale.inverse(MARGIN.left);
+    const xMax = xScale.inverse(width - MARGIN.right);
+    const yTop = MARGIN.top - 20;
+    const yBottom = height - MARGIN.bottom + 20;
+
+    return modelDef.variations.map((varParams) => {
+      const pts = generateCurvePoints(modelFn, varParams, xMin, xMax, 200);
+      let d = '';
+      let drawing = false;
+      for (const pt of pts) {
+        const sx = xScale(pt.x);
+        const sy = yScale(pt.y);
+        if (sy < yTop || sy > yBottom || !isFinite(sy)) {
+          drawing = false;
+          continue;
+        }
+        if (!drawing) {
+          d += `M${sx},${sy}`;
+          drawing = true;
+        } else {
+          d += `L${sx},${sy}`;
+        }
+      }
+      return d;
+    });
+  }, [modelId, modelFn, xScale, yScale, width, height]);
 
   const handlePointHover = useCallback((point, type) => {
     setHoveredPoint(point ? { ...point, type } : null);
@@ -287,7 +327,22 @@ export default function ScatterPlot({
           );
         })}
 
-        {/* Model curve */}
+        {/* Variation curves (multiple model instances in background) */}
+        {variationPaths.map((vPath, i) => vPath && (
+          <path
+            key={`var-${i}`}
+            d={vPath}
+            fill="none"
+            stroke={VARIATION_COLORS[i % VARIATION_COLORS.length]}
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeDasharray="6 4"
+            opacity={0.6}
+          />
+        ))}
+
+        {/* Model curve (current parameters) */}
         {curvePath && (
           <path
             d={curvePath}

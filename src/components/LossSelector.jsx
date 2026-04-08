@@ -28,6 +28,7 @@ export default function LossSelector({ selectedLoss, onSelectLoss, disabled = fa
           key={loss.id}
           name={loss.name}
           formula={loss.formula}
+          latex={loss.latex}
           selected={selectedLoss === loss.id}
           onClick={() => onSelectLoss(loss.id)}
           disabled={disabled}

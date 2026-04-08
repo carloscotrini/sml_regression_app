@@ -28,6 +28,7 @@ export default function ModelSelector({ selectedModel, onSelectModel, disabled =
           key={model.id}
           name={model.name}
           formula={model.formula}
+          latex={model.latex}
           selected={selectedModel === model.id}
           onClick={() => onSelectModel(model.id)}
           disabled={disabled}

@@ -1,7 +1,21 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
+import katex from 'katex';
+import 'katex/dist/katex.min.css';
 import { COLORS, FONTS } from '../../constants';
 
-export default function FormulaCard({ name, formula, selected, onClick, disabled = false }) {
+export default function FormulaCard({ name, formula, latex, selected, onClick, disabled = false }) {
+  const mathRef = useRef(null);
+
+  useEffect(() => {
+    if (mathRef.current && latex) {
+      katex.render(latex, mathRef.current, {
+        throwOnError: false,
+        displayMode: false,
+        output: 'html',
+      });
+    }
+  }, [latex]);
+
   return (
     <button
       onClick={onClick}
@@ -32,16 +46,27 @@ export default function FormulaCard({ name, formula, selected, onClick, disabled
       >
         {name}
       </span>
-      <span
-        style={{
-          fontFamily: FONTS.mono,
-          fontSize: 12,
-          color: selected ? COLORS.amber : COLORS.muted,
-          opacity: 0.9,
-        }}
-      >
-        {formula}
-      </span>
+      {latex ? (
+        <span
+          ref={mathRef}
+          style={{
+            fontSize: 14,
+            color: selected ? COLORS.amber : COLORS.muted,
+            opacity: 0.9,
+          }}
+        />
+      ) : (
+        <span
+          style={{
+            fontFamily: FONTS.mono,
+            fontSize: 12,
+            color: selected ? COLORS.amber : COLORS.muted,
+            opacity: 0.9,
+          }}
+        >
+          {formula}
+        </span>
+      )}
     </button>
   );
 }

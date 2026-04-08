@@ -1,12 +1,6 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { COLORS, FONTS, MODELS, LOSS_FUNCTIONS, ANIMATION } from '../constants';
-import {
-  computePredictions,
-  computeGradient,
-  gradientDescentStep,
-  clampParams,
-  getAdaptiveLearningRate,
-} from '../mathUtils';
+import React, { useCallback } from 'react';
+import { COLORS, FONTS, MODELS, LOSS_FUNCTIONS } from '../constants';
+import { computePredictions } from '../mathUtils';
 import LossDisplay from './shared/LossDisplay';
 
 export default function ParameterSliders({
@@ -15,12 +9,7 @@ export default function ParameterSliders({
   params,
   onParamsChange,
   trainData,
-  scenarioId,
 }) {
-  const [optimizing, setOptimizing] = useState(false);
-  const animRef = useRef(null);
-  const stepRef = useRef(0);
-
   const model = MODELS.find(m => m.id === modelId);
   const lossDef = LOSS_FUNCTIONS.find(l => l.id === lossId);
   if (!model || !lossDef) return null;
@@ -35,47 +24,6 @@ export default function ParameterSliders({
   const handleSliderChange = useCallback((paramName, value) => {
     onParamsChange({ ...params, [paramName]: parseFloat(value) });
   }, [params, onParamsChange]);
-
-  // Optimization animation
-  const optimize = useCallback(() => {
-    if (optimizing) return;
-    setOptimizing(true);
-    stepRef.current = 0;
-
-    const lr = getAdaptiveLearningRate(scenarioId, modelId);
-    let currentParams = { ...params };
-
-    const step = () => {
-      if (stepRef.current >= ANIMATION.optimizationSteps) {
-        setOptimizing(false);
-        return;
-      }
-
-      const gradient = computeGradient(
-        model.fn,
-        lossDef.fn,
-        currentParams,
-        model.params,
-        xValues,
-        yValues
-      );
-
-      currentParams = gradientDescentStep(currentParams, gradient, lr);
-      currentParams = clampParams(currentParams, model.params);
-      onParamsChange(currentParams);
-
-      stepRef.current++;
-      animRef.current = requestAnimationFrame(step);
-    };
-
-    animRef.current = requestAnimationFrame(step);
-  }, [optimizing, params, model, lossDef, xValues, yValues, scenarioId, modelId, onParamsChange]);
-
-  useEffect(() => {
-    return () => {
-      if (animRef.current) cancelAnimationFrame(animRef.current);
-    };
-  }, []);
 
   return (
     <div
@@ -138,7 +86,6 @@ export default function ParameterSliders({
             step={pDef.step}
             value={params[pDef.name] ?? pDef.default}
             onChange={(e) => handleSliderChange(pDef.name, e.target.value)}
-            disabled={optimizing}
             aria-label={pDef.label}
             aria-valuemin={pDef.min}
             aria-valuemax={pDef.max}
@@ -153,51 +100,6 @@ export default function ParameterSliders({
         value={currentLoss}
         color={currentLoss < 5 ? COLORS.green : COLORS.text}
       />
-
-      {/* Optimize button */}
-      <button
-        onClick={optimize}
-        disabled={optimizing}
-        style={{
-          padding: '12px 20px',
-          background: optimizing
-            ? COLORS.grid
-            : `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.cyan})`,
-          border: 'none',
-          borderRadius: 10,
-          cursor: optimizing ? 'wait' : 'pointer',
-          fontFamily: FONTS.display,
-          fontSize: 14,
-          fontWeight: 700,
-          color: COLORS.background,
-          transition: 'all 0.3s ease',
-          boxShadow: optimizing ? 'none' : `0 4px 16px ${COLORS.primary}40`,
-          letterSpacing: '0.02em',
-        }}
-      >
-        {optimizing ? 'Optimizing...' : 'Auto-Optimize (Gradient Descent)'}
-      </button>
-
-      {optimizing && (
-        <div
-          style={{
-            height: 4,
-            background: COLORS.grid,
-            borderRadius: 2,
-            overflow: 'hidden',
-          }}
-        >
-          <div
-            style={{
-              height: '100%',
-              background: `linear-gradient(90deg, ${COLORS.primary}, ${COLORS.cyan})`,
-              width: `${(stepRef.current / ANIMATION.optimizationSteps) * 100}%`,
-              transition: 'width 50ms linear',
-              borderRadius: 2,
-            }}
-          />
-        </div>
-      )}
     </div>
   );
 }
